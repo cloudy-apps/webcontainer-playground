@@ -14,16 +14,26 @@
   }
 </style>
 
-<div id="app" class="flex h-screen">
-  <div id="editor" class="w-1/2 h-full border-r"></div>
-  <div id="terminal" class="w-1/2 h-full pl-2"></div>
-</div>
+<body class="bg-gray-200">
+  <div id="app" class="flex h-screen">
+    <div id="editor" class="w-1/2 h-full border-r"></div>
+    <div id="terminal" class="w-1/2 h-full pl-2"></div>
+  </div>
+  <div id="preview" class="flex h-screen">
+    <iframe src="" id="wc" class="h-full pt-2"></iframe>
+  </div>
+</body>
 
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
 
   async function getContainer() {
     const webcontainer = await WebContainer.boot();
+
+    webcontainer.on("server-ready", (port, url) => {
+      document.getElementById("wc").src = url;
+    });
+
     await webcontainer.mount([]);
 
     return webcontainer;
@@ -32,7 +42,6 @@
   async function getEditor() {
     const codeMirror = CodeMirror(document.getElementById("editor"), {
       lineNumbers: true,
-      theme: "dracula",
     });
 
     window.addEventListener("resize", () => codeMirror.refresh());
