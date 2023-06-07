@@ -8,7 +8,7 @@
   href="https://unpkg.com/codemirror@5.59.4/lib/codemirror.css"
 />
 <script src="https://unpkg.com/xterm@4.15.0/lib/xterm.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/xterm@4.15.0/lib/xterm.css" />
+<link rel="stylesheet" href="https://unpkg.com/xterm@5.1.0/css/xterm.css" />
 
 <div id="app" class="flex h-screen">
   <div id="editor" class="w-1/2 h-full p-4 border-r"></div>
@@ -16,7 +16,10 @@
 </div>
 
 <script type="module">
-  import { WebContainer, FileSystemTree } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
+  import {
+    WebContainer,
+    FileSystemTree,
+  } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
 
   async function main() {
     const webcontainer = await WebContainer.boot();
