@@ -1,3 +1,20 @@
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+/>
+<script src="https://unpkg.com/codemirror@5.59.4/lib/codemirror.js"></script>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/codemirror@5.59.4/lib/codemirror.css"
+/>
+<script src="https://unpkg.com/xterm@4.15.0/lib/xterm.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/xterm@4.15.0/lib/xterm.css" />
+
+<div id="app" class="flex h-screen">
+  <div id="editor" class="w-1/2 h-full p-4 border-r"></div>
+  <div id="terminal" class="w-1/2 h-full p-4"></div>
+</div>
+
 <script type="module">
   import { WebContainer, FileSystemTree } from "@webcontainer/api";
   import { projectFiles } from "./project-files.ts";
@@ -8,5 +25,21 @@
     window.wc = webcontainer;
   }
 
-  main();
+  async function ui() {
+    const codeMirror = CodeMirror(document.getElementById("editor"), {
+      lineNumbers: true,
+      theme: "dracula",
+    });
+
+    const term = new Terminal();
+    term.open(document.getElementById("terminal"));
+    term.fit();
+
+    window.ui = { term, codeMirror };
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    main();
+    ui();
+  });
 </script>
