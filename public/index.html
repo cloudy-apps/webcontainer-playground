@@ -9,6 +9,7 @@
 />
 <script src="https://unpkg.com/xterm@4.15.0/lib/xterm.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/xterm@5.1.0/css/xterm.css" />
+<script src="https://unpkg.com/xterm-addon-fit@0.7.0/lib/xterm-addon-fit.js"></script>
 
 <div id="app" class="flex h-screen">
   <div id="editor" class="w-1/2 h-full p-4 border-r"></div>
@@ -18,27 +19,44 @@
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
 
-  async function main() {
+  async function getContainer() {
     const webcontainer = await WebContainer.boot();
     await webcontainer.mount([]);
-    window.wc = webcontainer;
+
+    return webcontainer;
   }
 
-  async function ui() {
+  async function getEditor() {
     const codeMirror = CodeMirror(document.getElementById("editor"), {
       lineNumbers: true,
       theme: "dracula",
     });
+  }
 
+  async function getTerminal() {
+    const { FitAddon } = window["xterm-addon-fit"];
+    const fitAddon = new FitAddon();
     const term = new Terminal();
-    term.open(document.getElementById("terminal"));
-    term.fit();
 
-    window.ui = { term, codeMirror };
+    term.open(document.getElementById("terminal"));
+    term.loadAddon(fitAddon);
+
+    fitAddon.fit();
+
+    window.addEventListener("resize", () => {
+      fitAddon.fit();
+    });
+
+    term.onData(data => term.write(data));
+
+    return term;
   }
 
   window.addEventListener("DOMContentLoaded", () => {
-    main();
-    ui();
+    const webcontainer = container();
+    const editor = getEditor();
+    const terminal = getTerminal();
+
+    window.ui = { terminal, editor, container };
   });
 </script>
