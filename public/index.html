@@ -6,10 +6,17 @@
 <link rel="stylesheet" href="/xterm.css" />
 <script src="/codemirror.js"></script>
 <script src="/xterm.js"></script>
+<script src="/xterm-addon-fit.js"></script>
+<style>
+  .CodeMirror {
+    height: 100%;
+    width: 100%;
+  }
+</style>
 
 <div id="app" class="flex h-screen">
-  <div id="editor" class="w-1/2 h-full p-4 border-r"></div>
-  <div id="terminal" class="w-1/2 h-full p-4"></div>
+  <div id="editor" class="w-1/2 h-full border-r"></div>
+  <div id="terminal" class="w-1/2 h-full pl-2"></div>
 </div>
 
 <script type="module">
@@ -36,8 +43,10 @@
 
   async function getTerminal() {
     const term = new Terminal({ convertEol: true });
-
     term.open(document.getElementById("terminal"));
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    fitAddon.fit();
 
     return term;
   }
