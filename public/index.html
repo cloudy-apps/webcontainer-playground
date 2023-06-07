@@ -16,8 +16,7 @@
 </div>
 
 <script type="module">
-  import { WebContainer, FileSystemTree } from "@webcontainer/api";
-  import { projectFiles } from "./project-files.ts";
+  import { WebContainer, FileSystemTree } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
 
   async function main() {
     const webcontainer = await WebContainer.boot();
