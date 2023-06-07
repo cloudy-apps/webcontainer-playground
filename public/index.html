@@ -1,10 +1,12 @@
 <script type="module">
-import { WebContainer, FileSystemTree } from '@webcontainer/api';
-import { projectFiles } from './project-files.ts';
+  import { WebContainer, FileSystemTree } from "@webcontainer/api";
+  import { projectFiles } from "./project-files.ts";
 
-async function main() {
-  const webcontainer = await WebContainer.boot();  
-  await webcontainer.mount([]);
-  window.wc = webcontainer;
-}
+  async function main() {
+    const webcontainer = await WebContainer.boot();
+    await webcontainer.mount([]);
+    window.wc = webcontainer;
+  }
+
+  main();
 </script>
