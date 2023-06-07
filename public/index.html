@@ -9,7 +9,6 @@
 />
 <script src="https://unpkg.com/xterm@4.15.0/lib/xterm.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/xterm@5.1.0/css/xterm.css" />
-<!-- <script src="https://unpkg.com/xterm-addon-fit@0.7.0/lib/xterm-addon-fit.js"></script> -->
 
 <div id="app" class="flex h-screen">
   <div id="editor" class="w-1/2 h-full p-4 border-r"></div>
@@ -42,12 +41,6 @@
     term.open(document.getElementById("terminal"));
     term.onData((data) => term.write(data));
 
-    // const fitAddon = new FitAddon.FitAddon();
-    // term.loadAddon(fitAddon);
-    // fitAddon.fit();
-
-    // window.addEventListener("resize", () => fitAddon.fit());
-
     return term;
   }
 
@@ -56,6 +49,6 @@
     const terminal = await getTerminal();
     const webcontainer = await getContainer();
 
-    window.ui = { terminal, editor, container };
+    window.ui = { terminal, editor, webcontainer };
   });
 </script>

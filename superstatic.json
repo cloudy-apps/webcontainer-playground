@@ -1,8 +1,9 @@
 {
   "public": "public",
+  "rewrites": [{ "source": "/", "destination": "/index.html" }],
   "headers": [
     {
-      "source": "**/*",
+      "source": "**/*.html",
       "headers": [
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
         { "key": "Cross-Origin-Embedder-Policy", "value": "credentialless" }
