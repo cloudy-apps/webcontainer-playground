@@ -52,10 +52,10 @@
     return term;
   }
 
-  window.addEventListener("DOMContentLoaded", () => {
-    const webcontainer = getContainer();
-    const editor = getEditor();
-    const terminal = getTerminal();
+  window.addEventListener("DOMContentLoaded", async () => {
+    const editor = await getEditor();
+    const terminal = await getTerminal();
+    const webcontainer = await getContainer();
 
     window.ui = { terminal, editor, container };
   });
