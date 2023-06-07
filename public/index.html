@@ -33,13 +33,15 @@
 
     window.addEventListener("resize", () => codeMirror.refresh());
     setTimeout(() => codeMirror.refresh(), 1);
+
+    return codeMirror;
   }
 
   async function getTerminal() {
-    const term = new Terminal();
+    const term = new Terminal({ convertEol: true });
 
     term.open(document.getElementById("terminal"));
-    term.onData((data) => term.write(data));
+    // term.onData((data) => term.write(data));
 
     return term;
   }
@@ -48,6 +50,22 @@
     const editor = await getEditor();
     const terminal = await getTerminal();
     const webcontainer = await getContainer();
+    const shell = await webcontainer.spawn("sh");
+
+    const input = new ReadableStream({
+      start(controller) {
+        terminal.onData((data) => controller.enqueue(data));
+      },
+    });
+
+    const output = new WritableStream({
+      write(data) {
+        terminal.write(data);
+      },
+    });
+
+    shell.output.pipeTo(output);
+    input.pipeTo(shell.input)
 
     window.ui = { terminal, editor, webcontainer };
   });
