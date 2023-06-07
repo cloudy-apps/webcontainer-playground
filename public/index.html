@@ -31,22 +31,21 @@
       lineNumbers: true,
       theme: "dracula",
     });
+
+    window.addEventListener("resize", () => codeMirror.refresh());
+    setTimeout(() => codeMirror.refresh(), 1);
   }
 
   async function getTerminal() {
-    const fitAddon = new FitAddon();
+    const fitAddon = new FitAddon.FitAddon();
     const term = new Terminal();
 
     term.open(document.getElementById("terminal"));
     term.loadAddon(fitAddon);
-
     fitAddon.fit();
 
-    window.addEventListener("resize", () => {
-      fitAddon.fit();
-    });
-
-    term.onData(data => term.write(data));
+    term.onData((data) => term.write(data));
+    window.addEventListener("resize", () => fitAddon.fit());
 
     return term;
   }
