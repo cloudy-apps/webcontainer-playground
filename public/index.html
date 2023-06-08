@@ -84,7 +84,6 @@
 
   function getTabs({ editor, terminal, preview }) {
     const tabs = document.querySelectorAll(".tab");
-    const tabContents = document.querySelectorAll(".tab-content > div");
     const handlers = {
       editor: () => editor.refresh(),
       terminal: () => terminal.focus(),
@@ -93,18 +92,19 @@
 
     tabs.forEach((tab) => {
       tab.addEventListener("click", () => {
+        const tabContents = document.querySelectorAll(".tab-content > div");
+
+        tabs.forEach((tab) => tab.classList.remove("bg-blue-400"));
+        tabContents.forEach((t) => t.classList.add("hidden"));
+
         tabContents.forEach((t) => {
           const target = tab.dataset.target;
-          handlers[target] && setTimeout(handlers[target], 1);
 
           if (t.id === target) {
             t.classList.remove("hidden");
             tab.classList.add("bg-blue-400");
-            return;
+            setTimeout(handlers[target], 1);
           }
-
-          t.classList.add("hidden");
-          tab.classList.remove("bg-blue-400");
         });
       });
     });
