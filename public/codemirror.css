@@ -1,7 +1,5 @@
 /* FROM https://unpkg.com/codemirror@5.59.4/lib/codemirror.css */
 
-.CodeMirror { height: 100%; width: 100%; }
-
 /* BASICS */
 
 .CodeMirror {
@@ -554,3 +552,5 @@ div.CodeMirror-dragcursors {
 span.CodeMirror-selectedtext {
   background: none;
 }
+
+.CodeMirror { height: 100%; width: 100%; }
