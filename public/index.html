@@ -23,7 +23,6 @@
     </div>
     <div class="tab-content w-full h-full">
       <div id="editor" class="w-full h-full p-4 flex">
-        <div id="files" class="w-1/3 pr-2 border-r-2 border"></div>
         <div id="code" class="flex-grow"></div>
       </div>
       <div id="preview" class="w-full h-full p-4 hidden">
@@ -36,6 +35,14 @@
 
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
+
+  function debounce(fn) {
+    let timer = 0;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), 300);
+    };
+  }
 
   async function getContainer() {
     const webcontainer = await WebContainer.boot();
@@ -82,6 +89,36 @@
     return term;
   }
 
+  async function getShell({ webcontainer, terminal }) {
+    const shell = await webcontainer.spawn("sh");
+
+    window.addEventListener("resize", () => {
+      shell.resize({
+        cols: terminal.cols,
+        rows: terminal.rows,
+      });
+    });
+
+    const input = new ReadableStream({
+      start(controller) {
+        terminal.onData((data) => {
+          controller.enqueue(data);
+        });
+      },
+    });
+
+    const output = new WritableStream({
+      write(data) {
+        terminal.write(data);
+      },
+    });
+
+    shell.output.pipeTo(output);
+    input.pipeTo(shell.input);
+
+    return { shell };
+  }
+
   function getTabs({ editor, terminal, preview }) {
     const tabs = document.querySelectorAll(".tab");
     const handlers = {
@@ -126,36 +163,37 @@
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
-    const currentFile = { path: "index.js" };
+    const currentFile = { path: "" };
     const editor = await getEditor();
     const terminal = await getTerminal();
     const webcontainer = await getContainer();
     const preview = document.getElementById("preview-frame");
-    const tabs = getTabs({ editor, terminal, preview });
-    const shell = await webcontainer.spawn("sh");
+    const tabs = await getTabs({ editor, terminal, preview });
+    const shell = await getShell({ terminal, webcontainer });
 
-    const input = new ReadableStream({
-      start(controller) {
-        terminal.onData((data) => {
-          console.log(data, String(data));
-          controller.enqueue(data);
-        });
-      },
-    });
-
-    const output = new WritableStream({
-      write(data) {
-        terminal.write(data);
-      },
-    });
-
-    shell.output.pipeTo(output);
-    input.pipeTo(shell.input);
-
-    editor.on("change", () =>
-      webconainer.fs.writeFile(currentFile.path, editor.getValue())
+    editor.on(
+      "change",
+      debounce(() => {
+        if (currentFile.path) {
+          webcontainer.fs.writeFile(currentFile.path, editor.getValue());
+        }
+      })
     );
 
-    window.ui = { terminal, editor, webcontainer };
+    const openfilePath = ".openfile";
+    await webcontainer.fs.writeFile(openfilePath, "");
+
+    async function openFile() {
+      const file = await webcontainer.fs.readFile(openfilePath);
+
+      if (file) {
+        editor.setValue(webcontainer.fs.readFile(file, "utf-8"));
+        webcontainer.fs.writeFile(openfilePath, "");
+      }
+    }
+
+    setInterval(openFile, 1000);
+
+    window.ui = { terminal, editor, webcontainer, shell };
   });
 </script>
