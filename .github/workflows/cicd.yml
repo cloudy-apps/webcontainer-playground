@@ -8,4 +8,6 @@ jobs:
       name: cloudy-apps/webcontainer-playground
       baseImage: cloud-cli/node:latest
       defaultBranch: main
+      withSha: false
+      withTag: true
       type: node
