@@ -11,30 +11,33 @@
 <body class="bg-gray-900">
   <div id="app" class="h-screen flex flex-col">
     <div class="tabs flex border-b-2">
-      <button class="tab py-2 px-4 text-white" data-target="editor">
-        Editor
-      </button>
       <button class="tab py-2 px-4 text-white" data-target="terminal">
         Terminal
       </button>
-      <button class="tab py-2 px-4 text-white" data-target="preview">
-        Preview
+      <button class="tab py-2 px-4 text-white" data-target="editor">
+        Editor
       </button>
+      <!-- <button class="tab py-2 px-4 text-white" data-target="preview">
+        Preview
+      </button> -->
     </div>
     <div class="tab-content w-full h-full">
+      <div id="terminal" class="w-full h-full p-4 bg-black hidden"></div>
+
       <div id="editor" class="w-full h-full p-4 flex">
         <div id="code" class="flex-grow"></div>
       </div>
-      <div id="preview" class="w-full h-full p-4 hidden">
+
+      <!-- <div id="preview" class="w-full h-full p-4 hidden">
         <iframe src="" id="preview-frame" class="w-full h-full"></iframe>
-      </div>
-      <div id="terminal" class="w-full h-full p-4 bg-black hidden"></div>
+      </div> -->
     </div>
   </div>
 </body>
 
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
+  import { profilerc } from "./profilerc.js";
 
   const openfilePath = ".openfile";
   const consoleStream = new WritableStream({
@@ -61,14 +64,19 @@
   async function getContainer() {
     const webcontainer = await WebContainer.boot();
 
-    webcontainer.on("server-ready", (port, url) => {
-      document.getElementById("preview-frame").src = url;
-    });
+    // webcontainer.on("server-ready", (port, url) => {
+    //   document.getElementById("preview-frame").src = url;
+    // });
 
     const tree = {
       [openfilePath]: {
         file: {
           contents: "",
+        },
+      },
+      ".profile": {
+        file: {
+          contents: profilerc,
         },
       },
       workspace: {
@@ -139,7 +147,7 @@
 
     const pwd = await exec(webcontainer, "pwd");
     inputController.enqueue(
-      `export PATH="/bin:/usr/bin:/usr/local/bin:${pwd}"\n`
+      `export PATH="/bin:/usr/bin:/usr/local/bin:${pwd.trim()}"\n`
     );
 
     return { shell, inputController };
@@ -150,26 +158,27 @@
     const handlers = {
       editor: () => editor.refresh(),
       terminal: () => terminal.focus(),
-      preview: () => preview.focus(),
+      // preview: () => preview.focus(),
+    };
+
+    const openTab = (target) => {
+      const tabContents = document.querySelectorAll(".tab-content > div");
+
+      tabs.forEach((tab) => tab.classList.remove("bg-blue-400"));
+      tabContents.forEach((t) => {
+        if (t.id === target) {
+          t.classList.remove("hidden");
+          tab.classList.add("bg-blue-400");
+          setTimeout(handlers[target], 1);
+          return;
+        }
+
+        t.classList.add("hidden");
+      });
     };
 
     tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        const tabContents = document.querySelectorAll(".tab-content > div");
-
-        tabs.forEach((tab) => tab.classList.remove("bg-blue-400"));
-        tabContents.forEach((t) => t.classList.add("hidden"));
-
-        tabContents.forEach((t) => {
-          const target = tab.dataset.target;
-
-          if (t.id === target) {
-            t.classList.remove("hidden");
-            tab.classList.add("bg-blue-400");
-            setTimeout(handlers[target], 1);
-          }
-        });
-      });
+      tab.addEventListener("click", () => openTab(tab.dataset.target));
     });
 
     document.addEventListener(
@@ -186,6 +195,8 @@
       },
       { capture: true }
     );
+
+    return { openTab };
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
@@ -217,6 +228,7 @@
       if (file) {
         editor.setValue(webcontainer.fs.readFile(file, "utf-8"));
         webcontainer.fs.writeFile(openfilePath, "");
+        tabs.openTab("editor");
       }
     }
 
