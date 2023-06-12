@@ -229,10 +229,11 @@ clear
     await webcontainer.fs.writeFile(openfilePath, "");
 
     async function openFile() {
-      const file = await webcontainer.fs.readFile(openfilePath, "utf8");
+      const file = (await webcontainer.fs.readFile(openfilePath, "utf8")).trim();
 
-      if (file.trim()) {
+      if (file) {
         editor.setValue(await webcontainer.fs.readFile(file, "utf-8"));
+        currentFile.path = file;
         webcontainer.fs.writeFile(openfilePath, "");
         tabs.openTab("editor");
       }
