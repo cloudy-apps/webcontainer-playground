@@ -69,7 +69,9 @@
       workspace: {
         file: {
           [openfilePath]: {
-            contents: "",
+            file: {
+              contents: "",
+            },
           },
         },
         directory: {
@@ -195,7 +197,10 @@
     const webcontainer = await getContainer();
     const preview = document.getElementById("preview-frame");
     const tabs = await getTabs({ editor, terminal, preview });
-    const { shell, inputController } = await getShell({ terminal, webcontainer });
+    const { shell, inputController } = await getShell({
+      terminal,
+      webcontainer,
+    });
 
     editor.on(
       "change",
