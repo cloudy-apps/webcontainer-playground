@@ -66,14 +66,12 @@
     });
 
     const tree = {
-      workspace: {
+      [openfilePath]: {
         file: {
-          [openfilePath]: {
-            file: {
-              contents: "",
-            },
-          },
+          contents: "",
         },
+      },
+      workspace: {
         directory: {
           "index.js": {
             file: {
