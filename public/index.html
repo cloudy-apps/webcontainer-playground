@@ -36,6 +36,20 @@
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
 
+  const openfilePath = ".openfile";
+  const consoleStream = new WritableStream({
+    write(data) {
+      console.log(data);
+    },
+  });
+
+  async function exec(wc, command, args) {
+    const cmd = await wc.spawn(command, args);
+    return new Promise((write) =>
+      cmd.output.pipeTo(new WritableStream({ write }))
+    );
+  }
+
   function debounce(fn) {
     let timer = 0;
     return (...args) => {
@@ -53,6 +67,11 @@
 
     const tree = {
       workspace: {
+        file: {
+          [openfilePath]: {
+            contents: "",
+          },
+        },
         directory: {
           "index.js": {
             file: {
@@ -99,8 +118,10 @@
       });
     });
 
+    let inputController;
     const input = new ReadableStream({
       start(controller) {
+        inputController = controller;
         terminal.onData((data) => {
           controller.enqueue(data);
         });
@@ -116,7 +137,12 @@
     shell.output.pipeTo(output);
     input.pipeTo(shell.input);
 
-    return { shell };
+    const pwd = await exec(webcontainer, "pwd");
+    inputController.enqueue(
+      `export PATH="/bin:/usr/bin:/usr/local/bin:${pwd}"\n`
+    );
+
+    return { shell, inputController };
   }
 
   function getTabs({ editor, terminal, preview }) {
@@ -169,7 +195,7 @@
     const webcontainer = await getContainer();
     const preview = document.getElementById("preview-frame");
     const tabs = await getTabs({ editor, terminal, preview });
-    const shell = await getShell({ terminal, webcontainer });
+    const { shell, inputController } = await getShell({ terminal, webcontainer });
 
     editor.on(
       "change",
@@ -180,11 +206,10 @@
       })
     );
 
-    const openfilePath = ".openfile";
     await webcontainer.fs.writeFile(openfilePath, "");
 
     async function openFile() {
-      const file = await webcontainer.fs.readFile(openfilePath);
+      const file = await webcontainer.fs.readFile(openfilePath, "utf8");
 
       if (file) {
         editor.setValue(webcontainer.fs.readFile(file, "utf-8"));
@@ -194,6 +219,6 @@
 
     setInterval(openFile, 1000);
 
-    window.ui = { terminal, editor, webcontainer, shell };
+    window.ui = { terminal, editor, webcontainer, shell, inputController };
   });
 </script>
