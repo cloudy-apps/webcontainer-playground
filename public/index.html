@@ -40,7 +40,6 @@
 
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
-  import { profilerc } from "./profilerc.js";
 
   const openfilePath = ".openfile";
   const consoleStream = new WritableStream({
@@ -82,11 +81,6 @@
           contents: `#!/usr/bin/env node
 
 require('fs').writeFile('${openfilePath}', process.argv[2])`,
-        },
-      },
-      ".profile": {
-        file: {
-          contents: profilerc,
         },
       },
     };
@@ -144,16 +138,17 @@ require('fs').writeFile('${openfilePath}', process.argv[2])`,
     });
 
     input.pipeTo(shell.input);
+    shell.output.pipeTo(output);
 
     const pwd = await exec(webcontainer, "pwd");
     const startScript = `
 export PATH="/bin:/usr/bin:/usr/local/bin:/home/node"
 ln -s ${pwd.trim()} /home/node
-sh /home/node/.profile
+chmod +x /home/node/.openfile.js
+alias open="node /home/node/.openfile.js"
 clear
 `;
     inputController.enqueue(startScript);
-    shell.output.pipeTo(output);
 
     return { shell, inputController };
   }
@@ -246,5 +241,6 @@ clear
     setInterval(openFile, 1000);
 
     window.ui = { terminal, editor, webcontainer, shell, inputController };
+    terminal.clear();
   });
 </script>
