@@ -11,7 +11,10 @@
 <body class="bg-gray-900">
   <div id="app" class="h-screen flex flex-col">
     <div class="tabs flex border-b-2">
-      <button class="tab py-2 px-4 text-white" data-target="terminal">
+      <button
+        class="tab py-2 px-4 text-white bg-blue-400"
+        data-target="terminal"
+      >
         Terminal
       </button>
       <button class="tab py-2 px-4 text-white" data-target="editor">
@@ -74,18 +77,16 @@
           contents: "",
         },
       },
+      ".openfile.js": {
+        file: {
+          contents: `#!/usr/bin/env node
+
+require('fs').writeFile('${openfilePath}', process.argv[2])`,
+        },
+      },
       ".profile": {
         file: {
           contents: profilerc,
-        },
-      },
-      workspace: {
-        directory: {
-          "index.js": {
-            file: {
-              contents: 'console.log("Hi!");',
-            },
-          },
         },
       },
     };
@@ -142,18 +143,22 @@
       },
     });
 
-    shell.output.pipeTo(output);
     input.pipeTo(shell.input);
 
     const pwd = await exec(webcontainer, "pwd");
-    inputController.enqueue(
-      `export PATH="/bin:/usr/bin:/usr/local/bin:${pwd.trim()}"\n`
-    );
+    const startScript = `
+export PATH="/bin:/usr/bin:/usr/local/bin:/home/node"
+ln -s ${pwd.trim()} /home/node
+sh /home/node/.profile
+clear
+`;
+    inputController.enqueue(startScript);
+    shell.output.pipeTo(output);
 
     return { shell, inputController };
   }
 
-  function getTabs({ editor, terminal, preview }) {
+  async function getTabs({ editor, terminal, preview }) {
     const tabs = document.querySelectorAll(".tab");
     const tabContents = document.querySelectorAll(".tab-content > div");
 
@@ -175,7 +180,6 @@
       tabContents.forEach((tab) => {
         if (tab.id === target) {
           tab.classList.remove("hidden");
-          tab.classList.add("bg-blue-400");
           setTimeout(handlers[target], 10);
           return;
         }
@@ -232,8 +236,8 @@
     async function openFile() {
       const file = await webcontainer.fs.readFile(openfilePath, "utf8");
 
-      if (file) {
-        editor.setValue(webcontainer.fs.readFile(file, "utf-8"));
+      if (file.trim()) {
+        editor.setValue(await webcontainer.fs.readFile(file, "utf-8"));
         webcontainer.fs.writeFile(openfilePath, "");
         tabs.openTab("editor");
       }
