@@ -22,9 +22,9 @@
       </button> -->
     </div>
     <div class="tab-content w-full h-full">
-      <div id="terminal" class="w-full h-full p-4 bg-black hidden"></div>
+      <div id="terminal" class="w-full h-full p-4 bg-black"></div>
 
-      <div id="editor" class="w-full h-full p-4 flex">
+      <div id="editor" class="w-full h-full p-4 flex hidden">
         <div id="code" class="flex-grow"></div>
       </div>
 
@@ -155,25 +155,32 @@
 
   function getTabs({ editor, terminal, preview }) {
     const tabs = document.querySelectorAll(".tab");
+    const tabContents = document.querySelectorAll(".tab-content > div");
+
     const handlers = {
       editor: () => editor.refresh(),
       terminal: () => terminal.focus(),
-      // preview: () => preview.focus(),
     };
 
     const openTab = (target) => {
-      const tabContents = document.querySelectorAll(".tab-content > div");
-
-      tabs.forEach((tab) => tab.classList.remove("bg-blue-400"));
-      tabContents.forEach((t) => {
-        if (t.id === target) {
-          t.classList.remove("hidden");
+      tabs.forEach((tab) => {
+        if (tab.dataset.target === target) {
           tab.classList.add("bg-blue-400");
-          setTimeout(handlers[target], 1);
           return;
         }
 
-        t.classList.add("hidden");
+        tab.classList.remove("bg-blue-400");
+      });
+
+      tabContents.forEach((tab) => {
+        if (tab.id === target) {
+          tab.classList.remove("hidden");
+          tab.classList.add("bg-blue-400");
+          setTimeout(handlers[target], 10);
+          return;
+        }
+
+        tab.classList.add("hidden");
       });
     };
 
