@@ -80,7 +80,7 @@
         file: {
           contents: `#!/usr/bin/env node
 
-require('fs').writeFile('${openfilePath}', process.argv[2])`,
+require('fs').writeFileSync('${openfilePath}', process.argv[2])`,
         },
       },
     };
