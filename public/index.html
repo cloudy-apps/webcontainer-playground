@@ -41,12 +41,8 @@
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
 
-  const openfilePath = ".openfile";
-  const consoleStream = new WritableStream({
-    write(data) {
-      console.log(data);
-    },
-  });
+  const openFilePath = ".cmd";
+  const commandFile = ".cmd.js";
 
   async function exec(wc, command, args) {
     const cmd = await wc.spawn(command, args);
@@ -63,29 +59,71 @@
     };
   }
 
-  async function getContainer() {
-    const webcontainer = await WebContainer.boot();
+  const getFile = (id) => fetch("/f/" + id);
+  const saveFile = (id, content) =>
+    fetch("/u/" + id, { body: content, method: "PUT" });
 
-    // webcontainer.on("server-ready", (port, url) => {
-    //   document.getElementById("preview-frame").src = url;
-    // });
+  async function getTree(root) {
+    const output = {};
+
+    for (const id of root.contents) {
+      const next = await getFile(id);
+
+      if (next.type === "d") {
+        output[next.name] = {
+          directory: {
+            ...(await getTree(next)),
+          },
+        };
+        continue;
+      }
+
+      output[next.name] = {
+        file: {
+          contents: next.contents,
+        },
+      };
+    }
+
+    return output;
+  }
+
+  async function getProjectFiles(webcontainer, projectId) {
+    const root = await getFile(projectId);
+    let fileTree = {};
+
+    if (root.ok) {
+      fileTree = await getTree(await root.json());
+      console.log(fileTree);
+    }
 
     const tree = {
-      [openfilePath]: {
+      [openFilePath]: {
         file: {
           contents: "",
         },
       },
-      ".openfile.js": {
+      [commandFile]: {
         file: {
-          contents: `#!/usr/bin/env node
-
-require('fs').writeFileSync('${openfilePath}', process.argv[2])`,
+          contents: commands,
         },
       },
+
+      ...fileTree,
     };
 
     await webcontainer.mount(tree);
+  }
+
+  async function getContainer() {
+    const projectId = location.pathname.slice(3);
+    const webcontainer = await WebContainer.boot();
+    const commands = await fetch("/commands.js").then((x) => x.text());
+
+    getProjectFiles(webcontainer, projectId);
+    // webcontainer.on("server-ready", (port, url) => {
+    //   document.getElementById("preview-frame").src = url;
+    // });
 
     return webcontainer;
   }
@@ -144,9 +182,8 @@ require('fs').writeFileSync('${openfilePath}', process.argv[2])`,
     const startScript = `
 export PATH="/bin:/usr/bin:/usr/local/bin:/home/node"
 ln -s ${pwd.trim()} /home/node
-chmod +x /home/node/.openfile.js
-alias open="node /home/node/.openfile.js"
-clear
+chmod +x /home/node/${commandFile}
+alias open="node /home/node/${commandFile} open"
 `;
     inputController.enqueue(startScript);
 
@@ -205,8 +242,25 @@ clear
     return { openTab };
   }
 
+  async function setupCommands({ webcontainer, editor, currentFile, tabs }) {
+    async function openFile() {
+      const file = (
+        await webcontainer.fs.readFile(openFilePath, "utf8")
+      ).trim();
+
+      if (file) {
+        editor.setValue(await webcontainer.fs.readFile(file, "utf-8"));
+        currentFile.path = file;
+        webcontainer.fs.writeFile(openFilePath, "");
+        tabs.openTab("editor");
+      }
+    }
+
+    setInterval(openFile, 1000);
+  }
+
   window.addEventListener("DOMContentLoaded", async () => {
-    const currentFile = { path: "" };
+    const currentFile = { path: "", nodeId: 0 };
     const editor = await getEditor();
     const terminal = await getTerminal();
     const webcontainer = await getContainer();
@@ -217,29 +271,18 @@ clear
       webcontainer,
     });
 
+    await setupCommands({ webcontainer, editor, currentFile, tabs });
+
     editor.on(
       "change",
       debounce(() => {
         if (currentFile.path) {
-          webcontainer.fs.writeFile(currentFile.path, editor.getValue());
+          const val = editor.getValue();
+          webcontainer.fs.writeFile(currentFile.path, val);
+          currentFile.nodeId && saveFile(currentFile.nodeId, val);
         }
       })
     );
-
-    await webcontainer.fs.writeFile(openfilePath, "");
-
-    async function openFile() {
-      const file = (await webcontainer.fs.readFile(openfilePath, "utf8")).trim();
-
-      if (file) {
-        editor.setValue(await webcontainer.fs.readFile(file, "utf-8"));
-        currentFile.path = file;
-        webcontainer.fs.writeFile(openfilePath, "");
-        tabs.openTab("editor");
-      }
-    }
-
-    setInterval(openFile, 1000);
 
     window.ui = { terminal, editor, webcontainer, shell, inputController };
     terminal.clear();
