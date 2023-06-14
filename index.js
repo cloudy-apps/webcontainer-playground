@@ -1,8 +1,8 @@
-const { readdir, createReadStream } = require("fs");
+const { readdirSync, createReadStream } = require("fs");
 const { randomBytes } = require("crypto");
 const http = require("http");
 
-const files = readdir("./public");
+const files = readdirSync("./public");
 const storeUrl = process.env.STORE_URL;
 const storeId = process.env.STORE_ID;
 const fileUrlFor = (fileId) => new URL(`${storeId}/files/${fileId}`, storeUrl);
