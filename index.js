@@ -6,6 +6,10 @@ const files = readdirSync("./public");
 const storeUrl = process.env.STORE_URL;
 const storeId = process.env.STORE_ID;
 const fileUrlFor = (fileId) => new URL(`${storeId}/files/${fileId}`, storeUrl);
+const mimeTypes = {
+  css: "text/css",
+  js: "text/javascript",
+};
 
 async function readBody(req) {
   return new Promise((resolve) => {
@@ -30,15 +34,19 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
+      "Content-Type": "text/html; charset=utf-8",
     });
     createReadStream("./public/index.html").pipe(res);
     return;
   }
 
   if (files.includes(url.pathname.slice(1))) {
+    const ext = url.pathname.split(".").pop();
     res.writeHead(200, {
       "Cache-Control": "max-age=7200",
+      "Content-Type": mimeTypes[ext] || "text/plain",
     });
+
     createReadStream("./public" + url.pathname).pipe(res);
     return;
   }
