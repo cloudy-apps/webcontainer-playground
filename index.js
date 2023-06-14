@@ -15,7 +15,7 @@ async function readBody(req) {
   });
 }
 
-http.createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
 
   if (url.pathname === "/") {
@@ -73,3 +73,5 @@ http.createServer(async (req, res) => {
   res.writeHead(404);
   res.end();
 });
+
+server.listen(process.env.PORT);
