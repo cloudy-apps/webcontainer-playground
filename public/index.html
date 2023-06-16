@@ -51,7 +51,13 @@
       fs.writeFileSync('${openFilePath}', args[1]);
       break;
   }
-  `
+  `;
+
+  const consoleStream = new WritableStream({
+    write(data) {
+      console.log(data);
+    },
+  });
 
   async function exec(wc, command, args) {
     const cmd = await wc.spawn(command, args);
