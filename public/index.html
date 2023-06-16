@@ -41,8 +41,17 @@
 <script type="module">
   import { WebContainer } from "https://unpkg.com/@webcontainer/api@1.1.5/dist/index.js";
 
-  const openFilePath = ".cmd";
+  const openFilePath = ".open";
   const commandFile = ".cmd.js";
+  const commands = `
+  const fs = require('fs');
+  const args = process.argv.slice(2);
+  switch(args[0]) {
+    case 'open':
+      fs.writeFileSync('${openFilePath}', args[1]);
+      break;
+  }
+  `
 
   async function exec(wc, command, args) {
     const cmd = await wc.spawn(command, args);
@@ -120,7 +129,7 @@
     const webcontainer = await WebContainer.boot();
     const commands = await fetch("/commands.js").then((x) => x.text());
 
-    getProjectFiles(webcontainer, projectId);
+    await getProjectFiles(webcontainer, projectId);
     // webcontainer.on("server-ready", (port, url) => {
     //   document.getElementById("preview-frame").src = url;
     // });
