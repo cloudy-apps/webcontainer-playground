@@ -1,3 +1,3 @@
 # webcontainer-playground
 
-Webcontainer.io playground
+webcontainer.io playground
